@@ -3,7 +3,34 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from core.models import *
 from core.serializers import EmployeeSerializer, AttendanceSerializer
+
+
 # Create your views here.
+
+def index(request):
+    return render(request, 'index.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @api_view(['GET'])
 def health_check(request):
     return Response({'status': 'API is running!'}, status=200)
