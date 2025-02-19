@@ -3,29 +3,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from core.models import *
 from core.serializers import EmployeeSerializer, AttendanceSerializer
-
+from core.arcface_model import match_face, extract_face_embeddings
 
 # Create your views here.
 
 def index(request):
     return render(request, 'index.html')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -55,6 +38,11 @@ def register_employee(request):
 
     # Create new employee
     employee = Employee.objects.create(name=name, email=email, photo=photo)
+    embedding = extract_face_embeddings(employee.photo.path)
+    if embedding is not None:
+        employee.set_embedding(embedding)
+        employee.save()
+
 
     return Response({
         "success": True,
@@ -185,42 +173,38 @@ def get_attendance_records(request):
 @api_view(['POST'])
 def mark_attendance(request):
     """
-    Marks attendance for an employee based on face recognition.
+    Marks attendance based on face recognition.
     """
-    employee_id = request.data.get('employee_id')
+    uploaded_photo = request.FILES.get('photo')
 
-    if not employee_id:
-        return Response({"success": False, "error": "Employee ID is required"}, status=400)
+    if not uploaded_photo:
+        return Response({"success": False, "error": "Photo is required"}, status=400)
 
-    try:
-        employee = Employee.objects.get(id=employee_id)
+    matched_employee, error_message = match_face(uploaded_photo)
 
-        # Determine IN or OUT based on last entry
-        last_entry = AttendanceLog.objects.filter(employee=employee).order_by('-timestamp').first()
-        new_status = "OUT" if last_entry and last_entry.status == "IN" else "IN"
+    if not matched_employee:
+        return Response({"success": False, "error": error_message}, status=404)
 
-        # Create and save attendance entry
-        attendance_entry = AttendanceLog.objects.create(
-            employee=employee,
-            status=new_status,
-            face_recognized=True  # Will be updated dynamically with ArcFace
-        )
+    # Determine IN or OUT status
+    last_entry = AttendanceLog.objects.filter(employee=matched_employee).order_by('-timestamp').first()
+    new_status = "OUT" if last_entry and last_entry.status == "IN" else "IN"
 
-        return Response({
-            "success": True,
-            "message": f"Attendance marked successfully: {new_status}",
-            "data": AttendanceSerializer(attendance_entry).data
-        }, status=201)
+    # Save attendance entry
+    attendance_entry = AttendanceLog.objects.create(
+        employee=matched_employee,
+        status=new_status,
+        face_recognized=True
+    )
 
-    except Employee.DoesNotExist:
-        return Response({"success": False, "error": "Employee not found"}, status=404)
-
-    except Exception as e:
-        return Response({"success": False, "error": str(e)}, status=500)
+    return Response({
+        "success": True,
+        "message": f"Attendance marked successfully: {new_status}",
+        "data": AttendanceSerializer(attendance_entry).data
+    }, status=201)
 
 
 
             
            
-    
+
 
