@@ -1,0 +1,23 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Panel</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/monitor.js' %}" defer></script>
+</head>
+<body>
+    <h2>Monitor Panel</h2>
+    <div class="container">
+        <div class="camera-box">
+            <video id="cameraFeed" autoplay></video>
+        </div>
+        <div class="response-box">
+            <h3>Attendance Status</h3>
+            <p id="attendanceMessage">Waiting for scan...</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -4,11 +4,19 @@ from rest_framework.response import Response
 from core.models import *
 from core.serializers import EmployeeSerializer, AttendanceSerializer
 from core.arcface_model import match_face, extract_face_embeddings
-
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+from datetime import timedelta
 # Create your views here.
 
 def index(request):
     return render(request, 'index.html')
+def admin_dashboard(request):
+    return render(request, 'admin_dashboard.html')
+
+def monitor_panel(request):
+    return render(request, 'monitor_panel.html')
 
 
 
@@ -18,7 +26,8 @@ def index(request):
 def health_check(request):
     return Response({'status': 'API is running!'}, status=200)
     
-#to register new employee   
+#to register new employee 
+@csrf_exempt  
 @api_view(['POST'])
 def register_employee(request):
     name = request.data.get('name')
@@ -90,17 +99,11 @@ def get_employee(request, id):
 
 
 # update api for employee   
-@api_view(['PUT', 'PATCH'])
+@api_view(['PATCH'])  # Changed to PATCH for partial updates 
 def update_employee(request, id):
-    try:
-        employee = Employee.objects.get(id=id)
-    except Employee.DoesNotExist:
-        return Response({
-            "success": False,
-            "message": "Employee not found"
-        }, status=404)
-
-    serializer = EmployeeSerializer(employee, data=request.data, partial=(request.method == 'PATCH'))
+    employee = get_object_or_404(Employee, id=id)
+    
+    serializer = EmployeeSerializer(employee, data=request.data, partial=True)
 
     if serializer.is_valid():
         serializer.save()
@@ -119,27 +122,13 @@ def update_employee(request, id):
 
 @api_view(['DELETE'])
 def delete_employee(request, id):
-    try:
-        employee = Employee.objects.get(id=id)
-        employee.delete()
+    employee = get_object_or_404(Employee, id=id)
+    employee.delete()
 
-        return Response({
-            "success": True,
-            "message": "Employee deleted successfully!"
-        }, status=200)
-
-    except Employee.DoesNotExist:
-        return Response({
-            "success": False,
-            "message": "Employee not found!"
-        }, status=404)
-
-    except Exception as e:
-        return Response({
-            "success": False,
-            "message": "Failed to delete employee.",
-            "error": str(e)
-        }, status=500)
+    return Response({
+        "success": True,
+        "message": "Employee deleted successfully!"
+    }, status=200)
 
     
 #to get all attendance records
@@ -167,9 +156,8 @@ def get_attendance_records(request):
 
 
 '''handling the attendance of employees(the monitor panel)
-   for the testing purpose, as a dummy part, sending id through post
-   in real time we will be using camera to capture the image and send it to the server'''
-
+  '''
+@csrf_exempt
 @api_view(['POST'])
 def mark_attendance(request):
     """
@@ -185,23 +173,48 @@ def mark_attendance(request):
     if not matched_employee:
         return Response({"success": False, "error": error_message}, status=404)
 
-    # Determine IN or OUT status
+    # ✅ Check last attendance entry for the employee
     last_entry = AttendanceLog.objects.filter(employee=matched_employee).order_by('-timestamp').first()
+
+    # ✅ Time threshold (1 minute)
+    time_threshold = timedelta(minutes=1)
+
+    if last_entry and (now() - last_entry.timestamp) < time_threshold:
+        return Response({
+            "success": False,
+            "message": f"Attendance already marked recently ({last_entry.status})",
+            "data": {
+                "employee_id": matched_employee.id,
+                "employee_name": matched_employee.name,
+                "last_entry_time": str(last_entry.timestamp),
+                "last_status": last_entry.status
+            }
+        }, status=200)
+
+    # ✅ Toggle IN/OUT status
     new_status = "OUT" if last_entry and last_entry.status == "IN" else "IN"
 
-    # Save attendance entry
+    # ✅ Save new attendance entry
     attendance_entry = AttendanceLog.objects.create(
         employee=matched_employee,
         status=new_status,
         face_recognized=True
     )
 
-    return Response({
+    return_data = {
         "success": True,
         "message": f"Attendance marked successfully: {new_status}",
-        "data": AttendanceSerializer(attendance_entry).data
-    }, status=201)
+        "data": {
+            "id": attendance_entry.id,
+            "timestamp": str(attendance_entry.timestamp),
+            "status": new_status,
+            "employee_id": matched_employee.id,
+            "employee_name": matched_employee.name
+        }
+    }
 
+    print("Returning API Response:", json.dumps(return_data, indent=4))  # ✅ Debug log
+    return Response(return_data, status=201)
 
 
             

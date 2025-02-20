@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/admin.js' %}" defer></script>
+</head>
+<body>
+    <h2>Admin Dashboard - Manage Employees</h2>
+
+    <!-- Employee Registration Form -->
+    <form id="addEmployeeForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="email" id="email" placeholder="Email ID" required>
+        <input type="file" id="photo" required>
+        <button type="submit">Add Employee</button>
+    </form>
+
+    <!-- Buttons to view employees and attendance logs -->
+    <button id="viewEmployeesBtn">View Employees</button>
+    <button id="viewAttendanceLogsBtn">View Attendance Logs</button>
+
+    <!-- Employee Table -->
+    <table id="employeeTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Photo</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Attendance Table -->
+    <table id="attendanceTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Employee</th>
+                <th>Timestamp</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</body>
+</html>
