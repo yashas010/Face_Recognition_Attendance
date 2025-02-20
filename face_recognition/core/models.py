@@ -42,6 +42,7 @@ class AttendanceLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)  # Entry Time
     status = models.CharField(max_length=10, choices=[("IN", "Check-In"), ("OUT", "Check-Out")])  # Entry Type
     face_recognized = models.BooleanField(default=False)  # Was Face Matched?
+    
 
     def __str__(self):
         return f"{self.employee.name} - {self.status} at {self.timestamp}"

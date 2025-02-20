@@ -9,19 +9,24 @@
     <script src="{% static 'js/admin.js' %}" defer></script>
 </head>
 <body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <a href="{% url 'index' %}">Home</a>
+    </div>
+
     <h2>Admin Dashboard - Manage Employees</h2>
 
     <!-- Employee Registration Form -->
     <form id="addEmployeeForm">
         <input type="text" id="name" placeholder="Name" required>
         <input type="email" id="email" placeholder="Email ID" required>
-        <input type="file" id="photo" required>
+        <input type="file" id="photo" placeholder="Photo(only JPEG/JPG)" required>
         <button type="submit">Add Employee</button>
     </form>
 
     <!-- Buttons to view employees and attendance logs -->
     <button id="viewEmployeesBtn">View Employees</button>
-    <button id="viewAttendanceLogsBtn">View Attendance Logs</button>
 
     <!-- Employee Table -->
     <table id="employeeTable" style="display: none;">
@@ -36,16 +41,20 @@
         <tbody></tbody>
     </table>
 
+    <button id="viewAttendanceLogsBtn">View Attendance Logs</button>
+
     <!-- Attendance Table -->
     <table id="attendanceTable" style="display: none;">
         <thead>
             <tr>
-                <th>Employee</th>
+                <th>Employee id</th>
+                <th>Employee Name</th>
                 <th>Timestamp</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
+
 </body>
 </html>

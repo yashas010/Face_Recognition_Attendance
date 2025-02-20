@@ -49,7 +49,7 @@ document.getElementById("viewEmployeesBtn").addEventListener("click", function (
         .then(response => response.json())
         .then(data => {
             let table = document.getElementById("employeeTable");
-            table.style.display = "block";
+            table.style.display = "table";
             let tbody = table.querySelector("tbody");
             tbody.innerHTML = "";
 
@@ -125,14 +125,16 @@ document.getElementById("viewAttendanceLogsBtn").addEventListener("click", funct
         .then(response => response.json())
         .then(data => {
             let logTable = document.getElementById("attendanceTable");
-            logTable.style.display = "block";
+            logTable.style.display = "table";
             let tbody = logTable.querySelector("tbody");
             tbody.innerHTML = "";
 
             data.data.forEach(log => {
                 let row = `<tr>
+    
+                    <td>${log.employee_id}</td>
                     <td>${log.employee_name}</td>
-                    <td>${log.timestamp}</td>
+                    <td>${log.formatted_timestamp}</td>
                     <td>${log.status}</td>
                 </tr>`;
                 tbody.innerHTML += row;
