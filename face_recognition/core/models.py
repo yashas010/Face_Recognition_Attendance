@@ -1,7 +1,7 @@
 from django.db import models
 import json  # Built-in, no installation needed
 import numpy as np  # Requires 'pip install numpy' if not installed
-from core.arcface_model import extract_face_embeddings
+from core.arcface_model import extract_single_face_embedding
 
 # Create your models here.
 
@@ -15,7 +15,17 @@ class Employee(models.Model):
     face_embedding = models.JSONField(null=True, blank=True)
     def set_embedding(self, embedding):
         """Save embedding as a JSON string."""
-        self.face_embedding = json.dumps(embedding.tolist())
+        if embedding is None:
+            print("❌ Error: Cannot save None embedding!")
+            return
+
+        print(f"🔍 Debug: Embedding type before saving: {type(embedding)}")
+
+        if not isinstance(embedding, np.ndarray):
+            print("⚠ Warning: Expected NumPy array, got", type(embedding))
+
+        self.face_embedding = json.dumps(embedding.tolist())  # Convert to JSON string
+        print("✅ Embedding stored successfully")
 
     def get_embedding(self):
         """Retrieve embedding as a NumPy array."""
@@ -26,11 +36,11 @@ class Employee(models.Model):
         super().save(*args, **kwargs)  # Save instance first
 
         if self.photo:  # If photo is uploaded
-            from core.arcface_model import extract_face_embeddings  # Import inside function
-
+            # Import inside function
+            from core.arcface_model import extract_single_face_embedding
             image_path = self.photo.path
             print(f"Extracting embeddings from: {image_path}")  # Get image file path
-            embedding = extract_face_embeddings(image_path)
+            embedding = extract_single_face_embedding(image_path)
 
             if embedding is not None:
                 self.set_embedding(embedding)

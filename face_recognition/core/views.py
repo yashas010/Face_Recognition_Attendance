@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from core.models import *
 from core.serializers import EmployeeSerializer, AttendanceSerializer
-from core.arcface_model import match_face, extract_face_embeddings
+from core.arcface_model import match_faces, extract_single_face_embedding, extract_face_embeddings
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -47,7 +47,7 @@ def register_employee(request):
 
     # Create new employee
     employee = Employee.objects.create(name=name, email=email, photo=photo)
-    embedding = extract_face_embeddings(employee.photo.path)
+    embedding = extract_single_face_embedding(employee.photo.path)
     if embedding is not None:
         employee.set_embedding(embedding)
         employee.save()
@@ -161,60 +161,67 @@ def get_attendance_records(request):
 @api_view(['POST'])
 def mark_attendance(request):
     """
-    Marks attendance based on face recognition.
+    Marks attendance based on face recognition for multiple employees.
     """
     uploaded_photo = request.FILES.get('photo')
 
     if not uploaded_photo:
         return Response({"success": False, "error": "Photo is required"}, status=400)
 
-    matched_employee, error_message = match_face(uploaded_photo)
+    matched_employees, error_message = match_faces(uploaded_photo)  # Now returns multiple matches
 
-    if not matched_employee:
+    print(f"✅ Found {len(matched_employees) if matched_employees else 0} matched employee(s)")
+
+    if not matched_employees:
         return Response({"success": False, "error": error_message}, status=404)
 
-    # ✅ Check last attendance entry for the employee
-    last_entry = AttendanceLog.objects.filter(employee=matched_employee).order_by('-timestamp').first()
-
-    # ✅ Time threshold (1 minute)
     time_threshold = timedelta(minutes=1)
+    responses = []
 
-    if last_entry and (now() - last_entry.timestamp) < time_threshold:
-        return Response({
-            "success": False,
-            "message": f"Attendance already marked recently ({last_entry.status})",
+    for employee in matched_employees:
+        print(f"🔹 Processing attendance for: {employee.name}")
+
+        last_entry = AttendanceLog.objects.filter(employee=employee).order_by('-timestamp').first()
+
+        if last_entry and (now() - last_entry.timestamp) < time_threshold:
+            print(f"⚠️ Attendance already marked recently for {employee.name} ({last_entry.status})")
+            responses.append({
+                "success": False,
+                "message": f"Attendance already marked recently ({last_entry.status})",
+                "data": {
+                    "employee_id": employee.id,
+                    "employee_name": employee.name,
+                    "last_entry_time": str(last_entry.timestamp),
+                    "last_status": last_entry.status
+                }
+            })
+            continue  # Skip marking attendance again
+
+        new_status = "OUT" if last_entry and last_entry.status == "IN" else "IN"
+
+        attendance_entry = AttendanceLog.objects.create(
+            employee=employee,
+            status=new_status,
+            face_recognized=True
+        )
+
+        print(f"✅ Attendance marked: {employee.name} -> {new_status}")
+
+        responses.append({
+            "success": True,
+            "message": f"Attendance marked successfully: {new_status}",
             "data": {
-                "employee_id": matched_employee.id,
-                "employee_name": matched_employee.name,
-                "last_entry_time": str(last_entry.timestamp),
-                "last_status": last_entry.status
+                "id": attendance_entry.id,
+                "timestamp": str(attendance_entry.timestamp),
+                "status": new_status,
+                "employee_id": employee.id,
+                "employee_name": employee.name
             }
-        }, status=200)
+        })
 
-    # ✅ Toggle IN/OUT status
-    new_status = "OUT" if last_entry and last_entry.status == "IN" else "IN"
+    print("Returning API Response:", json.dumps(responses, indent=4))  # ✅ Debug log
+    return Response(responses, status=201)
 
-    # ✅ Save new attendance entry
-    attendance_entry = AttendanceLog.objects.create(
-        employee=matched_employee,
-        status=new_status,
-        face_recognized=True
-    )
-
-    return_data = {
-        "success": True,
-        "message": f"Attendance marked successfully: {new_status}",
-        "data": {
-            "id": attendance_entry.id,
-            "timestamp": str(attendance_entry.timestamp),
-            "status": new_status,
-            "employee_id": matched_employee.id,
-            "employee_name": matched_employee.name
-        }
-    }
-
-    print("Returning API Response:", json.dumps(return_data, indent=4))  # ✅ Debug log
-    return Response(return_data, status=201)
 
 
             
