@@ -1,4 +1,4 @@
-{%load static%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Panel</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="{% static 'js/monitor.js' %}" defer></script>
+    <script src="{% static 'js/monitor.js' %}"></script>
 </head>
 <body>
     <h2>Monitor Panel</h2>
@@ -16,7 +16,9 @@
         </div>
         <div class="response-box">
             <h3>Attendance Status</h3>
-            <p id="attendanceMessage">Waiting for scan...</p>
+            <div id="attendanceMessage" class="attendance-message">
+                <p>Waiting for scan...</p>
+            </div>
         </div>
     </div>
 </body>
