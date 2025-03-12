@@ -1,7 +1,7 @@
 from django.db import models
 import json  # Built-in, no installation needed
 import numpy as np  # Requires 'pip install numpy' if not installed
-from core.arcface_model import extract_single_face_embedding
+
 
 # Create your models here.
 
