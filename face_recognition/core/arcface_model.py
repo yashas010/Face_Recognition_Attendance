@@ -6,11 +6,11 @@ import time
 from django.core.files.storage import default_storage
 from insightface.app import FaceAnalysis
 
-# Initialize Face Recognition Model
+# Initializing the Model
 app = FaceAnalysis(providers=['CPUExecutionProvider'])
 app.prepare(ctx_id=0, det_size=(640, 640))  # Use CPU with 640x640 detection size
 
-# Initialize FAISS index
+# Initializing the FAISS index
 embedding_dim = 512  # ArcFace produces 512-dimensional embeddings
 faiss_index = faiss.IndexFlatL2(embedding_dim)  # L2 distance-based FAISS index
 employee_id_map = []  # Stores Employee IDs mapped to FAISS index positions
@@ -93,13 +93,13 @@ def match_faces(uploaded_photo):
 
     total_start_time = time.time()  
 
-    # Step 1: Save uploaded image temporarily
+    # Save uploaded image temporarily
     start_time = time.time()
     temp_path = default_storage.save('temp_face.jpg', uploaded_photo)
     end_time = time.time()
     print(f"⏱ Image saving took {end_time - start_time:.4f} seconds")
 
-    # Step 2: Extract face embeddings
+    # Extract face embeddings
     start_time = time.time()
     uploaded_embeddings = extract_face_embeddings(default_storage.path(temp_path))
     end_time = time.time()
@@ -109,7 +109,7 @@ def match_faces(uploaded_photo):
         default_storage.delete(temp_path)
         return None, "No face detected in uploaded image"
 
-    # Step 3: Search FAISS for matches
+    #  Search FAISS for matches
     start_time = time.time()
 
     uploaded_embeddings_np = np.array(uploaded_embeddings, dtype=np.float32)  
