@@ -7,17 +7,23 @@
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="{% static 'js/admin.js' %}" defer></script>
+    <style>
+        .center-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Navbar -->
     <div class="navbar">
         <a href="{% url 'index' %}">Home</a>
     </div>
 
     <h2>Admin Dashboard - Manage Employees</h2>
 
-    <!-- Employee Registration Form -->
     <form id="addEmployeeForm">
         <input type="text" id="name" placeholder="Name" required>
         <input type="email" id="email" placeholder="Email ID" required>
@@ -25,13 +31,15 @@
         <button type="submit">Add Employee</button>
     </form>
 
-    <!-- Buttons to view employees and attendance logs -->
-    <button id="viewEmployeesBtn">View Employees</button>
+    <div class="center-buttons">
+        <button id="viewEmployeesBtn">View Employees</button>
+        <button id="viewAttendanceLogsBtn">View Attendance Logs</button>
+    </div>
 
-    <!-- Employee Table -->
     <table id="employeeTable" style="display: none;">
         <thead>
             <tr>
+                <th>Employee ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Photo</th>
@@ -41,13 +49,10 @@
         <tbody></tbody>
     </table>
 
-    <button id="viewAttendanceLogsBtn">View Attendance Logs</button>
-
-    <!-- Attendance Table -->
     <table id="attendanceTable" style="display: none;">
         <thead>
             <tr>
-                <th>Employee id</th>
+                <th>Employee ID</th>
                 <th>Employee Name</th>
                 <th>Timestamp</th>
                 <th>Status</th>
