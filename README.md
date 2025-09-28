@@ -12,6 +12,8 @@ This is a **Face Recognition Attendance System** built using the **ArcFace model
 - **Database:** Uses PostgreSQL as the database backend.
 - **Face Recognition:** Utilizes the ArcFace model for accurate identification.
 
+## Demo Video:https://drive.google.com/file/d/1SltPw9xbHM_sslbmMLkZtIRsZZzwvJrS/view?usp=sharing
+
 ## Open Source Libraries Used
 
 - **Django** - Web framework for backend development.
